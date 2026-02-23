@@ -5,11 +5,10 @@ import json
 import tarfile
 import tempfile
 from pathlib import Path
-from typing import Union
-from PIL import Image
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
 
+from PIL import Image
+from reportlab.graphics import renderPM
+from svglib.svglib import svg2rlg
 
 # Full set of app icon definitions: (width, height, filename)
 APP_ICON_SIZES = [
@@ -170,8 +169,8 @@ def crop_to_square(image: Image.Image) -> Image.Image:
 
 
 def convert_to_ico(
-    input_path: Union[str, Path],
-    output_path: Union[str, Path],
+    input_path: str | Path,
+    output_path: str | Path,
     crop_square: bool = False,
 ) -> None:
     """
@@ -216,15 +215,19 @@ def convert_to_ico(
     # Save as .ico with multiple sizes for better compatibility
     # Common favicon sizes: 16x16, 32x32, 48x48, 64x64, 128x128, 256x256
     sizes = [
-        (16, 16), (32, 32), (48, 48),
-        (64, 64), (128, 128), (256, 256),
+        (16, 16),
+        (32, 32),
+        (48, 48),
+        (64, 64),
+        (128, 128),
+        (256, 256),
     ]
     img.save(output_path, format="ICO", sizes=sizes)
 
 
 def generate_app_icons_bundle(
-    input_path: Union[str, Path],
-    output_path: Union[str, Path],
+    input_path: str | Path,
+    output_path: str | Path,
     crop_square: bool = False,
 ) -> None:
     """

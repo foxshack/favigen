@@ -2,30 +2,34 @@
 
 import sys
 from pathlib import Path
+
 import click
+
 from .converter import convert_to_ico, generate_app_icons_bundle
 
 
 @click.command()
-@click.argument('input_file', type=click.Path(exists=True, dir_okay=False, readable=True))
+@click.argument(
+    "input_file", type=click.Path(exists=True, dir_okay=False, readable=True)
+)
 @click.option(
-    '-o', '--output',
+    "-o",
+    "--output",
     type=click.Path(dir_okay=False, writable=True),
     help=(
-        'Output filename (default: input name with .ico extension,'
-        ' or app-icons.tar.gz with --app-icons)'
-    )
+        "Output filename (default: input name with .ico extension,"
+        " or app-icons.tar.gz with --app-icons)"
+    ),
 )
 @click.option(
-    '-c', '--crop',
-    is_flag=True,
-    help='Crop image to square before processing'
+    "-c", "--crop", is_flag=True, help="Crop image to square before processing"
 )
 @click.option(
-    '-a', '--app-icons',
-    'app_icons',
+    "-a",
+    "--app-icons",
+    "app_icons",
     is_flag=True,
-    help='Generate a full set of app icons bundled into a .tar.gz archive'
+    help="Generate a full set of app icons bundled into a .tar.gz archive",
 )
 @click.version_option()
 def main(input_file, output, crop, app_icons):
@@ -70,9 +74,7 @@ def main(input_file, output, crop, app_icons):
             if crop:
                 click.echo("Cropping to square...")
 
-            generate_app_icons_bundle(
-                input_path, output_path, crop_square=crop
-            )
+            generate_app_icons_bundle(input_path, output_path, crop_square=crop)
 
             click.echo(f"✓ Successfully created {output_path}")
             click.echo(
@@ -86,7 +88,7 @@ def main(input_file, output, crop, app_icons):
             if output:
                 output_path = Path(output)
             else:
-                output_path = input_path.with_suffix('.ico')
+                output_path = input_path.with_suffix(".ico")
 
             click.echo(f"Converting {input_path} to {output_path}...")
             if crop:
@@ -107,5 +109,5 @@ def main(input_file, output, crop, app_icons):
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
