@@ -1,4 +1,4 @@
-# favicon-generator
+# Favicon Generator
 
 A Python CLI tool to generate .ico favicon files from images (JPEG, PNG, or WEBP).
 
@@ -7,7 +7,7 @@ A Python CLI tool to generate .ico favicon files from images (JPEG, PNG, or WEBP
 Install using pipx (recommended):
 
 ```bash
-pipx install git+https://github.com/mikeh74/favicon-generator.git@v1.0
+pipx install git+https://github.com/foxshack/favigen.git@v0.5.0
 ```
 
 ## Usage

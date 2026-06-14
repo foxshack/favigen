@@ -6,7 +6,7 @@ import tarfile
 import tempfile
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageOps
 from reportlab.graphics import renderPM
 from svglib.svglib import svg2rlg
 
@@ -136,6 +136,8 @@ def _load_image(input_path: Path) -> Image.Image:
         return rasterize_svg(input_path)
 
     img = Image.open(input_path)
+    # Apply EXIF orientation so camera images are not rotated/flipped incorrectly.
+    img = ImageOps.exif_transpose(img)
     if img.mode not in ("RGB", "RGBA"):
         img = img.convert("RGBA")
     return img

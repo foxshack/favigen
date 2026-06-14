@@ -4,8 +4,9 @@ PYTHON_ENV_PATH := $(or $(VIRTUAL_ENV), $(VENV_NAME))
 PIP = $(PYTHON_ENV_PATH)/bin/pip
 RUFF = $(PYTHON_ENV_PATH)/bin/ruff
 PRECOMMIT = $(PYTHON_ENV_PATH)/bin/pre-commit
+PYTEST = $(PYTHON_ENV_PATH)/bin/pytest
 
-.PHONY: all build sdist wheel install install-dev check clean deps
+.PHONY: all build sdist wheel install install-dev check clean deps test
 
 venv:
 	@python3 -m venv $(VENV_NAME) && $(VENV_NAME)/bin/pip install --upgrade pip;
@@ -44,6 +45,11 @@ install: wheel
 # Perform code quality checks using ruff and pre-commit
 pre-commit: pre-commit-install
 	$(PRECOMMIT) run
+
+# Run test suite
+test: install-dev
+	$(PIP) install -e .[dev]
+	$(PYTEST)
 
 # Pre-commit targets
 pre-commit-all: pre-commit-install
