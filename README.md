@@ -7,7 +7,7 @@ A Python CLI tool to generate favicons and web app icon bundles from images (JPE
 Install using pipx (recommended):
 
 ```bash
-pipx install git+https://github.com/foxshack/favigen.git@v0.5.0
+pipx install git+https://github.com/foxshack/favigen.git@0.6.0
 ```
 
 ## Usage
