@@ -21,6 +21,9 @@ APP_ICON_SIZES = [
     # Android / Chrome
     (192, 192, "android-chrome-192x192.png"),
     (512, 512, "android-chrome-512x512.png"),
+    # Maskable icons for Android/PWA install surfaces
+    (192, 192, "maskable-icon-192x192.png"),
+    (512, 512, "maskable-icon-512x512.png"),
 ]
 
 SITE_WEBMANIFEST = {
@@ -31,11 +34,25 @@ SITE_WEBMANIFEST = {
             "src": "/android-chrome-192x192.png",
             "sizes": "192x192",
             "type": "image/png",
+            "purpose": "any",
         },
         {
             "src": "/android-chrome-512x512.png",
             "sizes": "512x512",
             "type": "image/png",
+            "purpose": "any",
+        },
+        {
+            "src": "/maskable-icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable",
+        },
+        {
+            "src": "/maskable-icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable",
         },
     ],
     "theme_color": "#ffffff",
@@ -43,7 +60,7 @@ SITE_WEBMANIFEST = {
     "display": "standalone",
 }
 
-BUNDLE_README = """\
+BASE_BUNDLE_README = """\
 # App Icons
 
 This package contains a full set of icons for use with websites and web apps.
@@ -59,7 +76,11 @@ This package contains a full set of icons for use with websites and web apps.
 | `apple-touch-icon.png` | 180×180 | iOS home screen icon |
 | `android-chrome-192x192.png` | 192×192 | Android home screen icon |
 | `android-chrome-512x512.png` | 512×512 | Android splash / PWA icon |
+| `maskable-icon-192x192.png` | 192×192 | Android/PWA maskable icon |
+| `maskable-icon-512x512.png` | 512×512 | Android/PWA maskable icon |
 | `site.webmanifest` | — | Web app manifest (PWA) |
+
+{svg_file_row}
 
 ## Usage
 
@@ -67,6 +88,7 @@ Place all files in the root of your website (e.g. `/public/` or `/static/`), the
 add the following snippet to the `<head>` of your HTML:
 
 ```html
+{svg_link}
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -79,9 +101,25 @@ add the following snippet to the `<head>` of your HTML:
 ### Notes
 
 - Edit `site.webmanifest` to set your app `name`, `short_name`, and `theme_color`.
+- Keep maskable icons in place for better Android launcher rendering.
 - For Next.js / Vite projects, place files in the `public/` directory.
 - For a plain HTML site, place files in the web root alongside `index.html`.
 """
+
+
+def _build_bundle_readme(include_svg: bool) -> str:
+    """Build bundle README content based on generated assets."""
+    svg_file_row = (
+        "| `favicon.svg` | scalable | Modern browsers (preferred where supported) |"
+        if include_svg
+        else ""
+    )
+    svg_link = (
+        '<link rel="icon" type="image/svg+xml" href="/favicon.svg">'
+        if include_svg
+        else ""
+    )
+    return BASE_BUNDLE_README.format(svg_file_row=svg_file_row, svg_link=svg_link)
 
 
 def rasterize_svg(svg_path: Path, target_size: int = 512) -> Image.Image:
@@ -268,6 +306,8 @@ def generate_app_icons_bundle(
     if not output_path.suffix == ".gz":
         output_path = output_path.with_suffix(".tar.gz")
 
+    include_svg = input_path.suffix.lower() == ".svg"
+
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp = Path(tmp_dir)
 
@@ -287,6 +327,12 @@ def generate_app_icons_bundle(
             resized = img.resize((width, height), Image.LANCZOS)
             resized.save(tmp / filename, format="PNG")
 
+        # Preserve original SVG as favicon.svg when source is vector.
+        if include_svg:
+            (tmp / "favicon.svg").write_text(
+                input_path.read_text(encoding="utf-8"), encoding="utf-8"
+            )
+
         # --- site.webmanifest ---
         manifest_path = tmp / "site.webmanifest"
         manifest_path.write_text(
@@ -295,7 +341,7 @@ def generate_app_icons_bundle(
 
         # --- README.md ---
         readme_path = tmp / "README.md"
-        readme_path.write_text(BUNDLE_README, encoding="utf-8")
+        readme_path.write_text(_build_bundle_readme(include_svg), encoding="utf-8")
 
         # --- Bundle into tar.gz ---
         with tarfile.open(output_path, "w:gz") as tar:
