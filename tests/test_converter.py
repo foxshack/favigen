@@ -118,3 +118,65 @@ def test_generate_app_icons_bundle_includes_favicon_svg_for_svg_input(
     with tarfile.open(output_path, "r:gz") as tar:
         names = {member.name for member in tar.getmembers()}
         assert "app-icons/favicon.svg" in names  # noqa: S101  # nosec B101
+
+
+def test_convert_to_ico_pads_non_square_jpeg_with_white(tmp_path: Path) -> None:
+    """JPEG input without --crop should be padded to square with white background."""
+    input_path = tmp_path / "wide.jpg"
+    output_path = tmp_path / "wide.ico"
+
+    Image.new("RGB", (240, 120), (255, 0, 0)).save(input_path, format="JPEG")
+
+    convert_to_ico(input_path, output_path, crop_square=False)
+
+    ico = Image.open(output_path).convert("RGB")
+    width, height = ico.size
+    assert width == height  # noqa: S101  # nosec B101
+
+    corner = ico.getpixel((2, 2))
+    center = ico.getpixel((width // 2, height // 2))
+
+    assert corner[0] > 230 and corner[1] > 230 and corner[2] > 230  # noqa: S101  # nosec B101
+    assert center[0] > 200 and center[1] < 80 and center[2] < 80  # noqa: S101  # nosec B101
+
+
+def test_convert_to_ico_pads_non_square_png_with_transparency(tmp_path: Path) -> None:
+    """PNG input without --crop should be padded to square with transparent background."""
+    input_path = tmp_path / "wide.png"
+    output_path = tmp_path / "wide.ico"
+
+    Image.new("RGBA", (240, 120), (0, 200, 0, 255)).save(input_path, format="PNG")
+
+    convert_to_ico(input_path, output_path, crop_square=False)
+
+    ico = Image.open(output_path).convert("RGBA")
+    width, height = ico.size
+    assert width == height  # noqa: S101  # nosec B101
+
+    corner = ico.getpixel((2, 2))
+    center = ico.getpixel((width // 2, height // 2))
+
+    assert corner[3] == 0  # noqa: S101  # nosec B101
+    assert center[1] > 150 and center[3] > 200  # noqa: S101  # nosec B101
+
+
+def test_generate_app_icons_bundle_pads_non_square_jpeg_with_white(
+    tmp_path: Path,
+) -> None:
+    """Bundle PNG assets should be generated from white-padded JPEG input by default."""
+    input_path = tmp_path / "wide.jpg"
+    output_path = tmp_path / "icons.tar.gz"
+    Image.new("RGB", (300, 150), (255, 0, 0)).save(input_path, format="JPEG")
+
+    generate_app_icons_bundle(input_path, output_path, crop_square=False)
+
+    with tarfile.open(output_path, "r:gz") as tar:
+        member = tar.extractfile("app-icons/favicon-32x32.png")
+        assert member is not None  # noqa: S101  # nosec B101
+        icon = Image.open(member).convert("RGB")
+
+    corner = icon.getpixel((1, 1))
+    center = icon.getpixel((16, 16))
+
+    assert corner[0] > 230 and corner[1] > 230 and corner[2] > 230  # noqa: S101  # nosec B101
+    assert center[0] > 200 and center[1] < 80 and center[2] < 80  # noqa: S101  # nosec B101

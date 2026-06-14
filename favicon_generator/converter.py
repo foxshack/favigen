@@ -208,6 +208,45 @@ def crop_to_square(image: Image.Image) -> Image.Image:
     return image.crop((left, top, right, bottom))
 
 
+def pad_to_square(
+    image: Image.Image, transparent_background: bool = False
+) -> Image.Image:
+    """
+    Pad an image to a square canvas while keeping original content centered.
+
+    Args:
+        image: PIL Image object to pad.
+        transparent_background: If True, use transparent padding.
+            If False, use white padding.
+
+    Returns:
+        Square PIL Image object.
+    """
+    width, height = image.size
+    if width == height:
+        return image
+
+    size = max(width, height)
+
+    if transparent_background:
+        square = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        source = image.convert("RGBA")
+        offset = ((size - width) // 2, (size - height) // 2)
+        square.paste(source, offset, source)
+        return square
+
+    if image.mode == "RGBA":
+        square = Image.new("RGBA", (size, size), (255, 255, 255, 255))
+        square.alpha_composite(
+            image.convert("RGBA"), ((size - width) // 2, (size - height) // 2)
+        )
+        return square
+
+    square = Image.new("RGB", (size, size), (255, 255, 255))
+    square.paste(image, ((size - width) // 2, (size - height) // 2))
+    return square
+
+
 def convert_to_ico(
     input_path: str | Path,
     output_path: str | Path,
@@ -248,9 +287,13 @@ def convert_to_ico(
     # Open and process the image (SVG is rasterised automatically)
     img = _load_image(input_path)
 
-    # Crop to square if requested
+    # Normalize to square: crop if requested, otherwise pad.
     if crop_square:
         img = crop_to_square(img)
+    else:
+        img = pad_to_square(
+            img, transparent_background=input_path.suffix.lower() == ".png"
+        )
 
     # Save as .ico with multiple sizes for better compatibility
     # Common favicon sizes: 16x16, 32x32, 48x48, 64x64, 128x128, 256x256
@@ -316,6 +359,11 @@ def generate_app_icons_bundle(
 
         if crop_square:
             img = crop_to_square(img)
+        else:
+            img = pad_to_square(
+                img,
+                transparent_background=input_path.suffix.lower() == ".png",
+            )
 
         # --- favicon.ico (multi-resolution) ---
         ico_path = tmp / "favicon.ico"

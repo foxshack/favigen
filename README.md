@@ -32,6 +32,9 @@ Crop image to square before processing:
 favigen image.webp --crop -o favicon.ico
 ```
 
+Without `--crop`, non-square inputs are automatically padded to a square.
+Padding is white by default, and transparent for PNG input.
+
 Generate a full app icon bundle (`.tar.gz`):
 
 ```bash
@@ -72,7 +75,7 @@ If the input file is SVG, the bundle also includes `favicon.svg` for modern brow
 
 - `INPUT_FILE`: Path to the input image (JPEG, PNG, WEBP, or SVG)
 - `-o, --output`: Output filename (`.ico` by default; `.tar.gz` with `--app-icons`)
-- `-c, --crop`: Crop image to square before processing
+- `-c, --crop`: Crop image to square before processing (default is padded square output)
 - `-a, --app-icons`: Generate full app icon bundle as a `.tar.gz` archive
 - `--version`: Show version information
 - `--help`: Show help message

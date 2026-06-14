@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "favigen"
-version = "0.6.0"
+version = "0.7.0"
 description = "A CLI tool to generate .ico favicon files from images"
 readme = "README.md"
 authors = [
